@@ -1,7 +1,8 @@
 # HTTP Codec
 
-A simple C++ library for encoding and decoding HTTP requests and responses.  
-It provides structured classes for `HTTPRequest` and `HTTPResponse` and functions to convert between raw HTTP strings and structured objects.
+A lightweight C++ library for encoding and decoding requests and responses. 
+
+It provides structured abstractions (HTTPRequest, HTTPResponse) and utilities to convert between raw HTTP messages and strongly-typed objects.
 
 ## Features
 
@@ -10,10 +11,26 @@ It provides structured classes for `HTTPRequest` and `HTTPResponse` and function
 - Handles optional headers and body safely.
 - Compatible with HTTP/1.1 request and response formats.
 
-## Getting Started
+## Project Structure
 
 The project includes the following files:
 
 - `include/http_codec.hpp` - Class definitions and function declarations.
 - `src/http_codec.cpp` - Implementation of encoding and decoding functions.
 - `src/main.cpp` - Example code demonstrating how to build, encode, and decode HTTP requests and responses.
+
+## Getting Started
+
+Compile
+``sh
+g++ -std=c++17 src/main.cpp src/http_codec.cpp -Iinclude -o http_codec_demo
+``
+
+Run
+``sh
+./http_codec_demo
+``
+
+## Notes
+- This library assumes well-formed HTTP/1.1 messages
+- Error handling and validation are minimal (by design)
