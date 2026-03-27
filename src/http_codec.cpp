@@ -1,5 +1,10 @@
-#include "http_codec.hpp"
+#include "../include/http_codec.hpp"
+#include <cstddef>
+#include <cstring>
+#include <stdexcept>
+#include <string>
 #include <sstream>
+#include <unordered_set>
 
 using namespace std;
 
@@ -139,29 +144,106 @@ HTTPResponse decode_http_response(const char* raw_response) {
     return response;
 }
 
+
+static bool is_valid_method(const string &method) {
+  if (method.empty() || method.size() > 7) return false;
+  for (char c : method) { if ( c < 'A' || c > 'Z') return false; }
+
+  static const std::unordered_set<string> allowed = {
+    "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"
+  };
+  return allowed.count(method) > 0;
+}
+
+static bool is_valid_path(const string &path) {
+  return !path.empty() && path[0] == '/';
+}
+
+static bool is_valid_version(const string &version) {
+  return version == "HTTP/1.1" || "HTTP/1.0"; 
+}
+
+static bool is_valid_header(const string &key, const string &val) {
+  // TODO: validators for only valid (RFC 7230 token set)
+  if (key.empty()) return false;
+  for (char c : key) {
+    if (c == '\r' || c == '\n' || c == ':') return false; 
+  }
+  for (char c : val) {
+    if (c == '\r' || c == '\n') return false;
+  }
+  return true;
+}
+
+static bool is_valid_content_length(const HTTPRequest &req) {
+  const auto cl = req.headers.find("Content-Length");
+  const auto te = req.headers.find("Transfer-Encoding");
+
+  const bool has_cl = cl != req.headers.end();
+  const bool has_te = te != req.headers.end();
+
+  // Both must not present
+  if (has_cl && has_te) return false;
+  if (!req.body.empty() && !has_cl && !has_te) return false;
+  if (has_cl) {
+    size_t content_length = 0;
+    try {
+      content_length = std::stoull(cl->second);
+    }
+    catch (...) {
+      return false;
+    }
+    if (content_length != req.body.size()) return false;
+  }
+  return true;
+}
+
+bool validate_http_request(const HTTPRequest &request) {
+  if (!is_valid_method(request.method)) return false;
+  if (!is_valid_path(request.path)) return false;
+  if (!is_valid_version(request.version)) return false;
+  for (auto &[k, v] : request.headers) {
+    if (!is_valid_header(k, v)) return false;
+  }
+  if (!is_valid_content_length(request)) return false;
+  return true;
+}
+
 string encode_http_request(const HTTPRequest &request) {
-    if (request.method.empty() ||
-        request.request_target.empty() ||
-        request.version.empty()) {
-        return "";
-    }
+  if (!validate_http_request(request)) {
+    throw std::runtime_error("Invalid HTTP request");
+  }
 
-    string raw = request.method + " " +
-                 request.request_target + " " +
-                 request.version + "\r\n";
+  string raw = request.method + " " + request.request_target + " " + request.version + "\r\n";
+  for (const auto &h : request.headers) {
+      raw += h.first + ": " + h.second + "\r\n";
+  }
 
-    for (const auto &h : request.headers) {
-        raw += h.first + ": " + h.second + "\r\n";
-    }
+  raw += "\r\n";
+  raw += request.body;
 
-    raw += "\r\n";
-    raw += request.body;
+  return raw;
+}
 
-    return raw;
+
+bool validate_http_response(const HTTPResponse &response) {
+  if (!is_valid_version(response.version)) return false;
+  if (response.status_code < 100 || response.status_code > 599) return false;
+  for (char c : response.reason_phrase) {
+    if (c == '\r' || c == '\n') return false;
+  }
+  for (auto &[k, v] : response.headers) {
+    if (!is_valid_header(k, v)) { return false; }
+  }
+  // if (!is_valid_content_length(response)) { return false; }
+
+  return true;
 }
 
 string encode_http_response(const HTTPResponse &response) {
-    if (response.version.empty()) return "";
+    if (!validate_http_response(response)) {
+      throw std::runtime_error("Invalid HTTP response");
+    };
 
     string raw = response.version + " " +
                  to_string(response.status_code) + " " +
