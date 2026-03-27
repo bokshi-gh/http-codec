@@ -3,7 +3,6 @@
 
 using namespace std;
 
-
 static void parse_request_target(HTTPRequest& req) {
     const string& target = req.request_target;
 
@@ -37,7 +36,6 @@ static void parse_request_target(HTTPRequest& req) {
         start = amp + 1;
     }
 }
-
 
 HTTPRequest decode_http_request(const char* raw_request) {
     HTTPRequest request;
@@ -161,7 +159,6 @@ string encode_http_request(const HTTPRequest &request) {
 
     return raw;
 }
-
 
 string encode_http_response(const HTTPResponse &response) {
     if (response.version.empty()) return "";
