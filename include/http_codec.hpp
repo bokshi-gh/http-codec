@@ -11,10 +11,11 @@ public:
     string raw;
     string method;
     string path;
+    unordered_map<string, string> dynamic_parameters;
+    unordered_map<string, string> query_parameters;
     string version;
     unordered_map<string, string> headers;
     string body;
-    unordered_map<string, string> parameters;
 };
 
 class HTTPResponse {
