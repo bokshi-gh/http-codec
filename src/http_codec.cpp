@@ -87,7 +87,7 @@ string encode_http_request(const HTTPRequest &request) {
 
 string encode_http_response(const HTTPResponse &response) {
     // WARNING: not handled for request.status_code
-    if (response.version.empty() || response.reason_phrase.empty()) {
+    if (response.version.empty()) {
         // cannot form valid request
         return "";   // or throw exception / return error code
     }
