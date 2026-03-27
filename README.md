@@ -19,9 +19,9 @@ It provides structured abstractions (HTTPRequest, HTTPResponse) and utilities to
 
 The project includes the following files:
 
-- `include/http_codec.hpp` - Class definitions and function declarations.
-- `src/http_codec.cpp` - Implementation of encoding and decoding functions.
-- `src/main.cpp` - Example code demonstrating how to build, encode, and decode HTTP requests and responses.
+- `include/http_codec.hpp` — Class definitions and function declarations
+- `src/http_codec.cpp` — Implementation of encoding and decoding functions
+- `src/main.cpp` — Example demonstrating encoding and decoding HTTP requests and responses
 
 ---
 
