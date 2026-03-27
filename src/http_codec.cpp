@@ -5,13 +5,12 @@
 
 /*
 * WARNING:
-* The decoder function assumes the raw request/response is in standard HTTP format
+* The decoder functions assumes the raw request/response is in standard HTTP format
 * If the raw request/response is not in the standard format due to no implemention
 * of error handling and consideration on the edge cases the function can
 * malperform and can be unsafe.
 *
 * Maybe I will fix this in upcoming version.
-* Till then let me go void.
 */
 HTTPRequest decode_http_request(const char* raw_request) {
     HTTPRequest request;

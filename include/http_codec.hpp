@@ -10,6 +10,7 @@ class HTTPRequest {
 public:
     string raw;
     string method;
+    string request_target;
     string path;
     unordered_map<string, string> dynamic_parameters;
     unordered_map<string, string> query_parameters;
