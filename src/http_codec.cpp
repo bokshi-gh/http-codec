@@ -1,40 +1,90 @@
 #include "http_codec.hpp"
-#include <cstddef>
-#include <cstring>
 #include <sstream>
 
-/*
-* WARNING:
-* The decoder functions assumes the raw request/response is in standard HTTP format
-* If the raw request/response is not in the standard format due to no implemention
-* of error handling and consideration on the edge cases the function can
-* malperform and can be unsafe.
-*
-* Maybe I will fix this in upcoming version.
-*/
+using namespace std;
+
+
+static void parse_request_target(HTTPRequest& req) {
+    const string& target = req.request_target;
+
+    size_t qpos = target.find('?');
+
+    if (qpos == string::npos) {
+        req.path = target;
+        return;
+    }
+
+    req.path = target.substr(0, qpos);
+
+    string query = target.substr(qpos + 1);
+
+    size_t start = 0;
+    while (start < query.size()) {
+        size_t eq = query.find('=', start);
+        size_t amp = query.find('&', start);
+
+        if (amp == string::npos) amp = query.size();
+
+        string key = query.substr(start,
+            (eq != string::npos && eq < amp) ? eq - start : amp - start);
+
+        string val = (eq != string::npos && eq < amp)
+            ? query.substr(eq + 1, amp - eq - 1)
+            : "";
+
+        req.query_parameters[key] = val;
+
+        start = amp + 1;
+    }
+}
+
+
 HTTPRequest decode_http_request(const char* raw_request) {
     HTTPRequest request;
 
-    string raw_request_string = string(raw_request);
-    request.raw = raw_request_string;
+    string raw(raw_request);
+    request.raw = raw;
 
-    size_t first_crlf_pos = raw_request_string.find("\r\n");
-    size_t last_crlf_pos = raw_request_string.rfind("\r\n");
+    size_t first_crlf = raw.find("\r\n");
+    if (first_crlf == string::npos) return request;
 
-    request.body = raw_request_string.substr(last_crlf_pos + 2);
+    string request_line = raw.substr(0, first_crlf);
 
-    string request_line = raw_request_string.substr(0, first_crlf_pos);
     istringstream iss(request_line);
-    iss >> request.method >> request.path >> request.version;
+    iss >> request.method >> request.request_target >> request.version;
 
-    string headers = raw_request_string.substr(first_crlf_pos + 2, last_crlf_pos - (first_crlf_pos + 2));
-    while (!headers.empty()) {
-		string header = headers.substr(0, headers.find("\r\n"));
-		size_t colon_pos = header.find(":");
-		size_t value_pos = (header[colon_pos + 1] == ' ')? colon_pos + 2 : colon_pos + 1;
-		request.headers[header.substr(0, colon_pos)] = header.substr(value_pos); 
-		headers = headers.substr(headers.find("\r\n") + 2);
+    parse_request_target(request);
+
+    size_t header_end = raw.find("\r\n\r\n");
+    if (header_end == string::npos) return request;
+
+    size_t headers_start = first_crlf + 2;
+    string headers_block = raw.substr(headers_start, header_end - headers_start);
+
+    size_t pos = 0;
+    while (pos < headers_block.size()) {
+        size_t end = headers_block.find("\r\n", pos);
+        if (end == string::npos) end = headers_block.size();
+
+        string header = headers_block.substr(pos, end - pos);
+
+        size_t colon = header.find(':');
+        if (colon != string::npos) {
+            string key = header.substr(0, colon);
+
+            size_t value_start = colon + 1;
+            if (value_start < header.size() && header[value_start] == ' ')
+                value_start++;
+
+            string value = header.substr(value_start);
+
+            request.headers[key] = value;
+        }
+
+        pos = end + 2;
     }
+
+    request.body = raw.substr(header_end + 4);
 
     return request;
 }
@@ -42,63 +92,90 @@ HTTPRequest decode_http_request(const char* raw_request) {
 HTTPResponse decode_http_response(const char* raw_response) {
     HTTPResponse response;
 
-    string raw_response_string = string(raw_response);
-    response.raw = raw_response_string;
+    string raw(raw_response);
+    response.raw = raw;
 
-    size_t first_crlf_pos = raw_response_string.find("\r\n");
-    size_t last_crlf_pos = raw_response_string.rfind("\r\n");
+    size_t first_crlf = raw.find("\r\n");
+    if (first_crlf == string::npos) return response;
 
-    response.body = raw_response_string.substr(last_crlf_pos + 2);
+    string status_line = raw.substr(0, first_crlf);
 
-    string response_line = raw_response_string.substr(0, first_crlf_pos);
-    istringstream iss(response_line);
-    iss >> response.version >> response.status_code >> response.reason_phrase;
+    istringstream iss(status_line);
+    iss >> response.version >> response.status_code;
 
-    string headers = raw_response_string.substr(first_crlf_pos + 2, last_crlf_pos - (first_crlf_pos + 2));
-    while (!headers.empty()) {
-		string header = headers.substr(0, headers.find("\r\n"));
-		size_t colon_pos = header.find(":");
-		size_t value_pos = (header[colon_pos + 1] == ' ')? colon_pos + 2 : colon_pos + 1;
-		response.headers[header.substr(0, colon_pos)] = header.substr(value_pos); 
-		headers = headers.substr(headers.find("\r\n") + 2);
+    getline(iss, response.reason_phrase);
+    if (!response.reason_phrase.empty() && response.reason_phrase[0] == ' ')
+        response.reason_phrase.erase(0, 1);
+
+    size_t header_end = raw.find("\r\n\r\n");
+    if (header_end == string::npos) return response;
+
+    size_t headers_start = first_crlf + 2;
+    string headers_block = raw.substr(headers_start, header_end - headers_start);
+
+    size_t pos = 0;
+    while (pos < headers_block.size()) {
+        size_t end = headers_block.find("\r\n", pos);
+        if (end == string::npos) end = headers_block.size();
+
+        string header = headers_block.substr(pos, end - pos);
+
+        size_t colon = header.find(':');
+        if (colon != string::npos) {
+            string key = header.substr(0, colon);
+
+            size_t value_start = colon + 1;
+            if (value_start < header.size() && header[value_start] == ' ')
+                value_start++;
+
+            string value = header.substr(value_start);
+
+            response.headers[key] = value;
+        }
+
+        pos = end + 2;
     }
+
+    response.body = raw.substr(header_end + 4);
 
     return response;
 }
 
 string encode_http_request(const HTTPRequest &request) {
-    if (request.method.empty() || request.path.empty() || request.version.empty()) {
-        // cannot form valid request
-        return "";   // or throw exception / return error code
+    if (request.method.empty() ||
+        request.request_target.empty() ||
+        request.version.empty()) {
+        return "";
     }
 
-    string raw_request = request.method + " " + request.path + " " + request.version + "\r\n";
+    string raw = request.method + " " +
+                 request.request_target + " " +
+                 request.version + "\r\n";
 
-    for (const auto &header : request.headers) {
-        raw_request += header.first + ": " + header.second + "\r\n";
+    for (const auto &h : request.headers) {
+        raw += h.first + ": " + h.second + "\r\n";
     }
 
-    raw_request += "\r\n";
-    raw_request += request.body;
+    raw += "\r\n";
+    raw += request.body;
 
-    return raw_request;
+    return raw;
 }
 
+
 string encode_http_response(const HTTPResponse &response) {
-    // WARNING: not handled for request.status_code
-    if (response.version.empty()) {
-        // cannot form valid request
-        return "";   // or throw exception / return error code
+    if (response.version.empty()) return "";
+
+    string raw = response.version + " " +
+                 to_string(response.status_code) + " " +
+                 response.reason_phrase + "\r\n";
+
+    for (const auto &h : response.headers) {
+        raw += h.first + ": " + h.second + "\r\n";
     }
 
-    string raw_response = response.version + " " + to_string(response.status_code) + " " + response.reason_phrase + "\r\n";
+    raw += "\r\n";
+    raw += response.body;
 
-    for (const auto &header : response.headers) {
-        raw_response += header.first + ": " + header.second + "\r\n";
-    }
-
-    raw_response += "\r\n";
-    raw_response += response.body;
-
-    return raw_response;
+    return raw;
 }
