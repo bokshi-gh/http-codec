@@ -2,7 +2,9 @@
 
 A lightweight C++ library for encoding and decoding HTTP/1.1 requests and responses.
 
-It provides structured abstractions (HTTPRequest, HTTPResponse) and utilities to convert between raw HTTP messages and strongly-typed objects.
+It provides structured abstractions (`HTTPRequest`, `HTTPResponse`) and utilities to convert between raw HTTP messages and strongly-typed objects.  
+
+Ideal for building C++ backend services or experimenting with HTTP message handling.
 
 ---
 
@@ -41,32 +43,16 @@ g++ -std=c++17 src/main.cpp src/http_codec.cpp -Iinclude -o http_codec_demo
 
 ---
 
-## Example Usage
+## Example
 
-```cpp
-#include "http_codec.hpp"
-#include <iostream>
-
-int main() {
-    const char* raw_request =
-        "GET /users?id=42 HTTP/1.1\r\n"
-        "Host: localhost\r\n"
-        "\r\n";
-
-    HTTPRequest req = decode_http_request(raw_request);
-
-    std::cout << "Method: " << req.method << "\n";
-    std::cout << "Path: " << req.path << "\n";
-    std::cout << "Query ID: " << req.query_parameters["id"] << "\n";
-}
-```
+See the full demo in [`src/main.cpp`](src/main.cpp).
 
 ---
 
 ## Notes
 
-- This library assumes well-formed HTTP/1.1 messages
-- Error handling and validation are minimal (by design)
+- Assumes **well-formed HTTP/1.1 messages**; malformed requests may produce undefined behavior.
+- Error handling and validation are minimal by design—intended for learning or controlled backend environments.
 
 ---
 
