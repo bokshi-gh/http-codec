@@ -37,3 +37,8 @@ Run
 
 - This library assumes well-formed HTTP/1.1 messages
 - Error handling and validation are minimal (by design)
+
+## License
+
+This project is licensed under the [MIT License](./LICENSE).  
+View the source code on [GitHub](https://github.com/bokshi-gh/http-codec.git).
