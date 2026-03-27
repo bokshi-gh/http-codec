@@ -43,7 +43,7 @@ g++ -std=c++17 src/main.cpp src/http_codec.cpp -Iinclude -o http_codec_demo
 
 ---
 
-## Example
+## Example Usage
 
 See the full demo in [`src/main.cpp`](src/main.cpp).
 
