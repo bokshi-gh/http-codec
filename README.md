@@ -23,15 +23,15 @@ The project includes the following files:
 
 Compile
 
-``sh
+```sh
 g++ -std=c++17 src/main.cpp src/http_codec.cpp -Iinclude -o http_codec_demo
-``
+```
 
 Run
 
-``sh
+```sh
 ./http_codec_demo
-``
+```
 
 ## Notes
 
