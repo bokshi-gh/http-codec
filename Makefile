@@ -11,10 +11,6 @@ PREFIX ?= /usr/local
 INCLUDE_DIR := $(PREFIX)/include/$(LIB_NAME)
 LIB_DIR := $(PREFIX)/lib
 
-VERSION ?= 1.0.0
-RELEASE_NAME := $(LIB_NAME)-$(VERSION)
-RELEASE_DIR := release/$(RELEASE_NAME)
-
 all: $(STATIC_LIB)
 
 $(STATIC_LIB): $(OBJS)
@@ -32,17 +28,6 @@ install: all
 uninstall:
 	rm -rf $(INCLUDE_DIR)
 	rm -f $(LIB_DIR)/$(STATIC_LIB)
-
-release: all
-	rm -rf release
-	mkdir -p $(RELEASE_DIR)
-	cp -r include $(RELEASE_DIR)/
-	mkdir -p $(RELEASE_DIR)/lib
-	cp $(STATIC_LIB) $(RELEASE_DIR)/lib/
-	cp README.md $(RELEASE_DIR)/ 2>/dev/null || true
-	cp INSTALLATION.md $(RELEASE_DIR)/ 2>/dev/null || true
-	cp LICENSE $(RELEASE_DIR)/ 2>/dev/null || true
-	cd release && zip -r $(RELEASE_NAME).zip $(RELEASE_NAME)
 
 clean:
 	rm -f $(OBJS) $(STATIC_LIB)
