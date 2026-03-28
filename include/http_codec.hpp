@@ -11,19 +11,10 @@ class HTTPRequest {
 public:
     string raw;
     string method;
-
-    // Raw request target from HTTP (e.g. "/users/?id=1")
-    string request_target;
-
-    string path;
-
-    // Populated by the routing layer (not by the HTTP codec)
-    // The codec does not know route patterns, so it cannot extract dynamic parameters
-    unordered_map<string, string> dynamic_parameters;
-
-    // Parsed from query string (?a=1&b=2)
-    unordered_map<string, string> query_parameters;
-
+    string request_target;      // e.g., /users?id=42
+    string path;                // path part of request_target
+    unordered_map<string, string> dynamic_parameters; // Filled by routing layer, not codec
+    unordered_map<string, string> query_parameters;   // Parsed from request_target query
     string version;
     unordered_map<string, string> headers;
     string body;
@@ -33,12 +24,11 @@ class HTTPResponse {
 public:
     string raw;
     string version;
-    optional<uint16_t> status_code;
+    uint16_t status_code;
     string reason_phrase;
     unordered_map<string, string> headers;
     string body;
 };
-
 
 HTTPRequest decode_http_request(const char *raw_request);
 HTTPResponse decode_http_response(const char *raw_response);
