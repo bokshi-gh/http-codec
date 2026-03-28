@@ -4,7 +4,7 @@ A lightweight C++ library for encoding and decoding HTTP/1.1 requests and respon
 
 It provides structured abstractions (`HTTPRequest`, `HTTPResponse`) and utilities to convert between raw HTTP messages and strongly-typed objects.  
 
-Ideal for building C++ backend services or experimenting with HTTP message handling.
+Ideal for building C++ backend services or experimenting with HTTP message handling, or learning low-level HTTP processing in C++.
 
 ---
 
@@ -12,7 +12,6 @@ Ideal for building C++ backend services or experimenting with HTTP message handl
 
 - Encode `HTTPRequest` / `HTTPResponse` into raw HTTP strings.
 - Decode raw HTTP strings into structured `HTTPRequest` / `HTTPResponse`.
-- Handles optional headers and body safely.
 - Compatible with HTTP/1.1 request and response formats.
 
 ---
@@ -21,9 +20,11 @@ Ideal for building C++ backend services or experimenting with HTTP message handl
 
 The project includes the following files:
 
-- `include/http_codec.hpp` — Class definitions and function declarations
-- `src/http_codec.cpp` — Implementation of encoding and decoding functions
-- `src/main.cpp` — Example demonstrating encoding and decoding HTTP requests and responses
+- `include/http_codec.hpp` — Class definitions and function declarations.
+- `include/codec_helpers.hpp` — Internal helpers for parsing request/response lines, headers, and query parameters.
+- `src/http_codec.cpp` — Implementation of encoding and decoding functions.
+- `src/codec_helpers.cpp` — Parsing helpers implementation.
+- `src/main.cpp` — Example demonstrating decoding, normalization, and encoding HTTP messages.
 
 ---
 
@@ -32,7 +33,7 @@ The project includes the following files:
 ### Compile
 
 ```sh
-g++ -std=c++17 src/main.cpp src/http_codec.cpp -Iinclude -o http_codec_demo
+g++ -std=c++17 src/main.cpp src/http_codec.cpp src/codec_helpers.cpp -Iinclude -o http_codec_demo
 ```
 
 ### Run
@@ -51,8 +52,9 @@ See the full demo in [`src/main.cpp`](src/main.cpp).
 
 ## Notes
 
-- Assumes **well-formed HTTP/1.1 messages**; malformed requests may produce undefined behavior.
-- Error handling and validation are minimal by design—intended for learning or controlled backend environments.
+- Assumes well-formed HTTP/1.1 messages; malformed requests may produce undefined behavior.
+- Minimal error handling is included for empty request/response lines, missing version, or status code, and HTTP format validation.
+- The library does not populate dynamic route parameters; this is the job of your routing layer.
 
 ---
 
