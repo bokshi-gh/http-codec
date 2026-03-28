@@ -28,7 +28,6 @@ public:
     string body;
 };
 
-// Decode/Encode
 HTTPRequest decode_http_request(const char* raw_request);
 HTTPResponse decode_http_response(const char* raw_response);
 
