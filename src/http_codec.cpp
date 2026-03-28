@@ -1,6 +1,7 @@
 #include "http_codec.hpp"
 #include "codec_helpers.hpp"
 #include <stdexcept>
+#include <regex>
 
 using namespace std;
 
@@ -46,6 +47,10 @@ string encode_http_request(const HTTPRequest &request) {
     if (request.method.empty()) throw runtime_error("Method empty");
     if (request.request_target.empty()) throw runtime_error("Target empty");
     if (request.version.empty()) throw runtime_error("Version empty");
+    
+    regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
+    if (!regex_match(request.version, version_regex))
+        throw runtime_error("Invalid HTTP version format");
 
     string raw = request.method + " " + request.request_target + " " + request.version + "\r\n";
     for (auto &h : request.headers) raw += h.first + ": " + h.second + "\r\n";
@@ -55,6 +60,11 @@ string encode_http_request(const HTTPRequest &request) {
 
 string encode_http_response(const HTTPResponse &response) {
     if (response.version.empty()) throw runtime_error("Version empty");
+
+    regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
+    if (!regex_match(response.version, version_regex))
+        throw runtime_error("Invalid HTTP version format");
+    
     if (response.status_code < 100 || response.status_code > 599)
         throw runtime_error("Invalid status code");
 
