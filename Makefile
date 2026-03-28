@@ -36,7 +36,7 @@ install: all
 	cp -r include/* $(INCLUDE_DIR)/
 	@echo "Installing static library to $(LIB_DIR)"
 	cp $(STATIC_LIB) $(LIB_DIR)/
-	@echo "Done. You may need sudo for system directories."
+	@echo "Installation complete."
 
 # Uninstall headers and library
 uninstall:
