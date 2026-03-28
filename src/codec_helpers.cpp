@@ -43,7 +43,7 @@ void parse_request_line(HTTPRequest& req, const string& line) {
     string extra;
     if (iss >> extra) throw runtime_error("Unexpected extra data in request line");
 
-    regex version_regex(R"(HTTP/\d\.\d)");
+    regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
     if (!regex_match(req.version, version_regex))
         throw runtime_error("Invalid HTTP version format");
 
@@ -56,7 +56,7 @@ void parse_response_line(HTTPResponse& res, const string& line) {
     if (!(iss >> res.version)) throw runtime_error("Missing HTTP version");
     if (!(iss >> res.status_code)) throw runtime_error("Missing status code");
 
-    regex version_regex(R"(HTTP/\d\.\d)");
+    regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
     if (!regex_match(res.version, version_regex))
         throw runtime_error("Invalid HTTP version format");
 
