@@ -30,6 +30,13 @@ The project includes the following files:
 
 ## Getting Started
 
+### Clone
+
+```sh
+git clone https://github.com/bokshi-gh/http-codec.git
+cd http-codec
+```
+
 ### Compile
 
 ```sh
