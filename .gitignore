@@ -1,10 +1,7 @@
-*.un~
-*.swp
-
 http_codec_demo
 
 *.o
 *.a
 
-*.out
-*.exe
+*.un~
+*.swp
