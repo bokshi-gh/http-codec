@@ -7,14 +7,16 @@ PREFIX="/usr/local"
 
 TMP_DIR=$(mktemp -d)
 
-echo "==> Cloning repository..."
+echo "Cloning repository..."
 git clone --depth 1 "$REPO_URL" "$TMP_DIR"
 cd "$TMP_DIR"
 
-echo "==> Building $LIB_NAME..."
+echo ""
+echo "Building $LIB_NAME..."
 make
 
-echo "==> Installing $LIB_NAME system-wide to $PREFIX..."
+echo ""
+echo "Installing $LIB_NAME system-wide to $PREFIX..."
 make install PREFIX="$PREFIX"
 
 cd /
