@@ -1,54 +1,50 @@
-# Makefile for http_codec static library
-
-# Compiler and flags
 CXX := g++
 CXXFLAGS := -std=c++17 -Iinclude -Wall -Wextra -O2 -fPIC
 
-# Sources
 SRCS := src/http_codec.cpp src/codec_helpers.cpp
-
-# Object files
 OBJS := $(SRCS:.cpp=.o)
 
-# Static library name
-STATIC_LIB := libhttp_codec.a
+LIB_NAME := http_codec
+STATIC_LIB := lib$(LIB_NAME).a
 
-# Installation directories (can override PREFIX)
 PREFIX ?= /usr/local
-INCLUDE_DIR := $(PREFIX)/include/http_codec
+INCLUDE_DIR := $(PREFIX)/include/$(LIB_NAME)
 LIB_DIR := $(PREFIX)/lib
 
-# Default target
+VERSION ?= 1.0.0
+RELEASE_NAME := $(LIB_NAME)-$(VERSION)
+RELEASE_DIR := release/$(RELEASE_NAME)
+
 all: $(STATIC_LIB)
 
-# Build static library
 $(STATIC_LIB): $(OBJS)
 	ar rcs $@ $^
 
-# Compile .cpp files into .o
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Install headers and library
 install: all
-	@echo "Installing headers to $(INCLUDE_DIR)"
 	mkdir -p $(INCLUDE_DIR)
 	cp -r include/* $(INCLUDE_DIR)/
-	@echo "Installing static library to $(LIB_DIR)"
+	mkdir -p $(LIB_DIR)
 	cp $(STATIC_LIB) $(LIB_DIR)/
-	@echo "Installation complete."
 
-# Uninstall headers and library
 uninstall:
-	@echo "Removing headers from $(INCLUDE_DIR)"
 	rm -rf $(INCLUDE_DIR)
-	@echo "Removing static library from $(LIB_DIR)/$(STATIC_LIB)"
 	rm -f $(LIB_DIR)/$(STATIC_LIB)
-	@echo "Uninstall complete."
 
-# Clean build files
+release: all
+	rm -rf release
+	mkdir -p $(RELEASE_DIR)
+	cp -r include $(RELEASE_DIR)/
+	mkdir -p $(RELEASE_DIR)/lib
+	cp $(STATIC_LIB) $(RELEASE_DIR)/lib/
+	cp README.md $(RELEASE_DIR)/ 2>/dev/null || true
+	cp INSTALLATION.md $(RELEASE_DIR)/ 2>/dev/null || true
+	cp LICENSE $(RELEASE_DIR)/ 2>/dev/null || true
+	cd release && zip -r $(RELEASE_NAME).zip $(RELEASE_NAME)
+
 clean:
 	rm -f $(OBJS) $(STATIC_LIB)
 
-# Phony targets
-.PHONY: all clean install uninstall
+.PHONY: all install uninstall release clean
