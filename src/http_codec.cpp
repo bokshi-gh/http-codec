@@ -202,7 +202,7 @@ string encode_http_response(const HTTPResponse &response) {
         throw runtime_error("Cannot build response line: Version is empty");
     }
     if (!response.status_code.has_value()) {
-        throw runtime_error("Cannot build response line: Status Code is empty");
+        throw runtime_error("Cannot build response line: Status code is empty");
     }
 
     string raw = response.version + " " +
