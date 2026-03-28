@@ -20,4 +20,5 @@ make install PREFIX="$PREFIX"
 cd /
 rm -rf "$TMP_DIR"
 
-echo "==> Installation complete!"
+echo ""
+echo "Installation complete!"
