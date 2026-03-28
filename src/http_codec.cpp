@@ -48,9 +48,24 @@ HTTPRequest decode_http_request(const char* raw_request) {
 
     string request_line = raw.substr(0, first_crlf);
 
-    istringstream iss(request_line);
-    iss >> request.method >> request.request_target >> request.version;
+    if (request_line.empty()) {
+        throw std::runtime_error("Empty request line received");
+    }
 
+    std::istringstream iss(request_line);
+
+    // Try to extract all three parts
+    if (!(iss >> request.method >> request.request_target >> request.version)) {
+        throw std::runtime_error("Incomplete request line: expected METHOD TARGET VERSION");
+    }
+
+    // Optional: Check for extra data (RFC compliance)
+    // If the string has 4 words instead of 3, this catches it
+    std::string extra;
+    if (iss >> extra) {
+        throw std::runtime_error("Malformed request: unexpected extra data after version");
+    }
+    
     parse_request_target(request);
 
     size_t header_end = raw.find("\r\n\r\n");
@@ -98,13 +113,31 @@ HTTPResponse decode_http_response(const char* raw_response) {
 
     string status_line = raw.substr(0, first_crlf);
 
-    istringstream iss(status_line);
-    iss >> response.version >> response.status_code;
+    if (status_line.empty()) {
+        throw std::runtime_error("Empty status line received");
+    }
 
-    getline(iss, response.reason_phrase);
-    if (!response.reason_phrase.empty() && response.reason_phrase[0] == ' ')
+    std::istringstream iss(status_line);
+
+    // Extract Version (e.g., HTTP/1.1)
+    if (!(iss >> response.version)) {
+        throw std::runtime_error("Response Error: Missing HTTP version");
+    }
+
+    // Extract Status Code (e.g., 200)
+    if (!(iss >> response.status_code)) {
+        throw std::runtime_error("Response Error: Missing status code");
+    }
+
+    // Extract the rest of the line as the Reason Phrase (e.g., OK)
+    // getline grabs everything left in the stream
+    std::getline(iss, response.reason_phrase);
+
+    // Clean up the leading space left by the '>>' operator
+    if (!response.reason_phrase.empty() && response.reason_phrase[0] == ' ') {
         response.reason_phrase.erase(0, 1);
-
+    }
+    
     size_t header_end = raw.find("\r\n\r\n");
     if (header_end == string::npos) return response;
 
@@ -140,10 +173,14 @@ HTTPResponse decode_http_response(const char* raw_response) {
 }
 
 string encode_http_request(const HTTPRequest &request) {
-    if (request.method.empty() ||
-        request.request_target.empty() ||
-        request.version.empty()) {
-        return "";
+    if (req.method.empty()) {
+        throw std::runtime_error("Cannot build request line: Method is empty");
+    }
+    if (req.request_target.empty()) {
+        throw std::runtime_error("Cannot build request line: Target is empty");
+    }
+    if (req.version.empty()) {
+        throw std::runtime_error("Cannot build request line: Version is empty");
     }
 
     string raw = request.method + " " +
@@ -161,7 +198,12 @@ string encode_http_request(const HTTPRequest &request) {
 }
 
 string encode_http_response(const HTTPResponse &response) {
-    if (response.version.empty()) return "";
+    if (response.version.empty()) {
+        throw runtime_error("Cannot build response line: Version is empty");
+    }
+    if (!response.status_code.has_value()) {
+        throw runtime_error("Cannot build response line: Status Code is empty");
+    }
 
     string raw = response.version + " " +
                  to_string(response.status_code) + " " +

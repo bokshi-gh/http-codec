@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <cstdint>
+#include <optional>
 
 using namespace std;
 
@@ -32,7 +33,7 @@ class HTTPResponse {
 public:
     string raw;
     string version;
-    uint16_t status_code;
+    optional<uint16_t> status_code;
     string reason_phrase;
     unordered_map<string, string> headers;
     string body;
