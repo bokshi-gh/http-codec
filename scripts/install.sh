@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-REPO_URL="https://github.com/yourusername/http_codec.git"
+REPO_URL="https://github.com/bokshi-gh/http-codec.git"
 LIB_NAME="http_codec"
 PREFIX="/usr/local"
 
