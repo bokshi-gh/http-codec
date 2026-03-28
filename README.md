@@ -72,7 +72,7 @@ curl -sSL https://raw.githubusercontent.com/bokshi-gh/http-codec/main/scripts/in
 > sudo ldconfig
 > ```
 
-### Using the Library in Your Code
+### Using the Library in Your C++ Project
 
 Include the header in your C++ source files:
 
