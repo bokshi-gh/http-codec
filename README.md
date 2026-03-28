@@ -64,7 +64,7 @@ See the full demo in [`src/main.cpp`](src/main.cpp).
 Run the installer script:
 
 ```sh
-curl -sSL https://raw.githubusercontent.com/bokshi-gh/http_codec/main/scripts/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/bokshi-gh/http-codec/main/scripts/install.sh | sudo bash
 ```
 
 > After installation, update the linker cache on Linux:
