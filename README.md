@@ -86,6 +86,18 @@ Compile your project with:
 g++ main.cpp -lhttp_codec -o your_app
 ```
 
+### Uninstall the Library from the System
+
+```sh
+sudo rm -rf /usr/local/include/http_codec
+sudo rm -f /usr/local/lib/libhttp_codec.a
+```
+
+> After uninstalling, you may also want to update the linker cache on Linux:
+> ```sh
+> sudo ldconfig
+> ```
+
 ---
 
 ## Notes
