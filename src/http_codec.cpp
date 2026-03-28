@@ -1,7 +1,26 @@
 #include "http_codec.hpp"
 #include <sstream>
+#include <stdexcept>
 
 using namespace std;
+
+static void validate_method(string method_string, HTTPRequest& req) {
+  if (method_string == "GET" || method_string == "POST", method_string == "PUT" || method_string == "DELETE" || method_string == "PATCH") {
+    req.method = method_string;
+    return;
+  }
+
+  throw runtime_error("Invalid HTTP Method");
+}
+
+static void validate_status_code(uint16_t raw_response_status_code, HTTPResponse& res) {
+  if (raw_response_status_code > 600) {
+    res.status_code = raw_response_status_code;
+    return;
+  }
+
+  throw runtime_error("Invalid HTTP Status Code");
+}
 
 static void parse_request_target(HTTPRequest& req) {
     const string& target = req.request_target;
@@ -48,8 +67,12 @@ HTTPRequest decode_http_request(const char* raw_request) {
 
     string request_line = raw.substr(0, first_crlf);
 
+    string method_string;
+
     istringstream iss(request_line);
-    iss >> request.method >> request.request_target >> request.version;
+    iss >> method_string >> request.request_target >> request.version;
+
+    validate_method(method_string, request);
 
     parse_request_target(request);
 
@@ -98,8 +121,12 @@ HTTPResponse decode_http_response(const char* raw_response) {
 
     string status_line = raw.substr(0, first_crlf);
 
+    uint16_t raw_response_version_status_code;
+
     istringstream iss(status_line);
-    iss >> response.version >> response.status_code;
+    iss >> raw_response_version_status_code >> response.status_code;
+
+    validate_version(raw_response_status_code, response);
 
     getline(iss, response.reason_phrase);
     if (!response.reason_phrase.empty() && response.reason_phrase[0] == ' ')
