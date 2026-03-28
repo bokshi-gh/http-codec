@@ -57,6 +57,37 @@ See the full demo in [`src/main.cpp`](src/main.cpp).
 
 ---
 
+## Installation
+
+### System-Wide Installation via Remote Installer Script
+
+Run the installer script:
+
+```sh
+curl -sSL https://raw.githubusercontent.com/bokshi-gh/http_codec/main/scripts/install.sh | sudo bash
+```
+
+> After installation, update the linker cache on Linux:
+> ```sh
+> sudo ldconfig
+> ```
+
+### Using the Library in Your Code
+
+Include the header in your C++ source files:
+
+```cpp
+#include <http_codec/http_codec.hpp>
+```
+
+Compile your project with:
+
+```sh
+g++ main.cpp -lhttp_codec -o your_app
+```
+
+---
+
 ## Notes
 
 - Assumes well-formed HTTP/1.1 messages; malformed requests may produce undefined behavior.
