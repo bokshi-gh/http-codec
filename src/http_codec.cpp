@@ -47,6 +47,8 @@ string encode_http_request(const HTTPRequest &request) {
     if (request.method.empty()) throw invalid_argument("Method empty");
     if (request.request_target.empty()) throw invalid_argument("Target empty");
     if (request.version.empty()) throw invalid_argument("Version empty");
+
+    validate_request_target(request.request_target);
     
     regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
     if (!regex_match(request.version, version_regex))
