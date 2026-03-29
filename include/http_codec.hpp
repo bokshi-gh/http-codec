@@ -11,8 +11,8 @@ public:
     string method;
     string request_target;
     string path;
-    unordered_map<string, string> dynamic_parameters; // Filled by routing layer
-    unordered_map<string, string> query_parameters;   // Filled by codec
+    unordered_map<string, string> parameters;        // Filled by routing layer
+    unordered_map<string, string> query_parameters;  // Filled by codec
     string version;
     unordered_map<string, string> headers;
     string body;
