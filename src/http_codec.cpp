@@ -44,13 +44,13 @@ HTTPResponse decode_http_response(const char* raw_response) {
 }
 
 string encode_http_request(const HTTPRequest &request) {
-    if (request.method.empty()) throw runtime_error("Method empty");
-    if (request.request_target.empty()) throw runtime_error("Target empty");
-    if (request.version.empty()) throw runtime_error("Version empty");
+    if (request.method.empty()) throw invalid_argument("Method empty");
+    if (request.request_target.empty()) throw invalid_argument("Target empty");
+    if (request.version.empty()) throw invalid_argument("Version empty");
     
     regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
     if (!regex_match(request.version, version_regex))
-        throw runtime_error("Invalid HTTP version format");
+        throw invalid_argument("Invalid HTTP version format");
 
     string normalized_request_target = request.request_target;
     if (normalized_request_target.size() > 1 && normalized_request_target.back() == '/') {
@@ -64,14 +64,14 @@ string encode_http_request(const HTTPRequest &request) {
 }
 
 string encode_http_response(const HTTPResponse &response) {
-    if (response.version.empty()) throw runtime_error("Version empty");
+    if (response.version.empty()) throw invalid_argument("Version empty");
 
     regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
     if (!regex_match(response.version, version_regex))
-        throw runtime_error("Invalid HTTP version format");
+        throw invalid_argument("Invalid HTTP version format");
     
     if (response.status_code < 100 || response.status_code > 599)
-        throw runtime_error("Invalid status code");
+        throw invalid_argument("Invalid status code");
 
     string raw = response.version + " " + to_string(response.status_code) + " " + response.reason_phrase + "\r\n";
     for (auto &h : response.headers) raw += h.first + ": " + h.second + "\r\n";
