@@ -8,7 +8,7 @@ LIB_NAME := http_codec
 STATIC_LIB := lib$(LIB_NAME).a
 
 PREFIX ?= /usr/local
-INCLUDE_DIR := $(PREFIX)/include/$(LIB_NAME)
+INCLUDE_DIR := $(PREFIX)/include
 LIB_DIR := $(PREFIX)/lib
 
 all: $(STATIC_LIB)
