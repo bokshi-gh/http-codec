@@ -5,8 +5,9 @@
 using namespace std;
 
 void normalize_request_target(HTTPRequest& req) {
-    if (req.request_target.size() > 1 && req.request_target.back() == '/')
+    while (req.request_target.size() > 1 && req.request_target.back() == '/') {
         req.request_target.pop_back();
+    }
 }
 
 void validate_request_target(const string& request_target) {
