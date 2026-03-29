@@ -24,30 +24,7 @@ The project includes the following files:
 - `include/codec_helpers.hpp` — Internal helpers for parsing request/response lines, headers, and query parameters.
 - `src/http_codec.cpp` — Implementation of encoding and decoding functions.
 - `src/codec_helpers.cpp` — Parsing helpers implementation.
-- `src/main.cpp` — Example demonstrating decoding, normalization, and encoding HTTP messages.
-
----
-
-## Getting Started
-
-### Clone
-
-```sh
-git clone https://github.com/bokshi-gh/http-codec.git
-cd http-codec
-```
-
-### Compile
-
-```sh
-g++ -std=c++17 src/main.cpp src/http_codec.cpp src/codec_helpers.cpp -Iinclude -o http_codec_demo
-```
-
-### Run
-
-```sh
-./http_codec_demo
-```
+- `examples/http_codec_demo.cpp` — Example demonstrating decoding, normalization, and encoding HTTP messages.
 
 ---
 
