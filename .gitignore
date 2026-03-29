@@ -1,8 +1,4 @@
 http_codec_demo
-release/
+*.out
 
-*.o
 *.a
-
-*.un~
-*.swp
