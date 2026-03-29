@@ -30,7 +30,7 @@ The project includes the following files:
 
 ## Example Usage
 
-See the full demo in [`src/main.cpp`](src/main.cpp).
+See the full demo in [`examples/http_codec_demo.cpp`](examples/http_codec_demo.cpp).
 
 ---
 
