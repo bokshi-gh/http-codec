@@ -9,6 +9,12 @@ void normalize_request_target(HTTPRequest& req) {
         req.request_target.pop_back();
 }
 
+void validate_request_target(const string& request_target) {
+    if (request_target.empty() || !request_target.starts_with('/')) {
+        throw std::invalid_argument("Invalid request target: " + request_target + " (must start with '/')");
+    }
+}
+
 void parse_request_target(HTTPRequest& req) {
     normalize_request_target(req);
 
@@ -35,33 +41,33 @@ void parse_request_target(HTTPRequest& req) {
 }
 
 void parse_request_line(HTTPRequest& req, const string& line) {
-    if (line.empty()) throw runtime_error("Empty request line");
+    if (line.empty()) throw invalid_argument("Empty request line");
     istringstream iss(line);
     if (!(iss >> req.method >> req.request_target >> req.version))
-        throw runtime_error("Incomplete request line");
+        throw invalid_argument("Incomplete request line");
 
     string extra;
-    if (iss >> extra) throw runtime_error("Unexpected extra data in request line");
+    if (iss >> extra) throw invalid_argument("Unexpected extra data in request line");
 
     regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
     if (!regex_match(req.version, version_regex))
-        throw runtime_error("Invalid HTTP version format");
+        throw invalid_argument("Invalid HTTP version format");
 
     parse_request_target(req);
 }
 
 void parse_response_line(HTTPResponse& res, const string& line) {
-    if (line.empty()) throw runtime_error("Empty response line");
+    if (line.empty()) throw invalid_argument("Empty response line");
     istringstream iss(line);
-    if (!(iss >> res.version)) throw runtime_error("Missing HTTP version");
-    if (!(iss >> res.status_code)) throw runtime_error("Missing status code");
+    if (!(iss >> res.version)) throw invalid_argument("Missing HTTP version");
+    if (!(iss >> res.status_code)) throw invalid_argument("Missing status code");
 
     regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
     if (!regex_match(res.version, version_regex))
-        throw runtime_error("Invalid HTTP version format");
+        throw invalid_argument("Invalid HTTP version format");
 
     if (res.status_code < 100 || res.status_code > 599)
-        throw runtime_error("Invalid HTTP status code");
+        throw invalid_argument("Invalid HTTP status code");
 
     getline(iss, res.reason_phrase);
     if (!res.reason_phrase.empty() && res.reason_phrase[0] == ' ')
