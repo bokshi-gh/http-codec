@@ -2,10 +2,6 @@
 
 A lightweight C++ library for encoding and decoding HTTP/1.1 requests and responses.
 
-It provides structured abstractions (`HTTPRequest`, `HTTPResponse`) and utilities to convert between raw HTTP messages and strongly-typed objects.  
-
-Ideal for building C++ backend services or experimenting with HTTP message handling, or learning low-level HTTP processing in C++.
-
 ---
 
 ## Features
