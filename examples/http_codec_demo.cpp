@@ -1,56 +1,60 @@
-#include "path/to/http_codec.hpp"
-
 #include <iostream>
+#include "http_codec.hpp"
 
 using namespace std;
 
 int main() {
-    const char* raw_request =
-        "POST /api/v1/users?active=true&limit=10 HTTP/1.1\r\n"
-        "Host: localhost:8080\r\n"
-        "Content-Type: application/json\r\n"
-        "User-Agent: custom-client\r\n"
+    // Example raw HTTP request
+    const char* raw_request = 
+        "POST /api/data?user=alice&id=123 HTTP/1.1\r\n"
+        "Host: example.com\r\n"
+        "Content-Length: 27\r\n"
+        "Connection: keep-alive\r\n"
         "\r\n"
-        "{ \"name\": \"Rajesh Thapa\" }";
+        "{\"message\":\"Hello World!\"}";
 
-    HTTPRequest req = decode_http_request(raw_request);
+    // --- Decode HTTP Request ---
+    HTTPRequest request = decode_http_request(raw_request);
 
-    cout << "===== REQUEST =====\n";
-    cout << "Method: " << req.method << "\n";
-    cout << "Target: " << req.request_target << "\n";
-    cout << "Path: " << req.path << "\n";
-    cout << "Version: " << req.version << "\n";
+    cout << "--- Decoded HTTP Request ---\n";
+    cout << "Method: " << request.method << "\n";
+    cout << "Request Target: " << request.request_target << "\n";
+    cout << "Path: " << request.path << "\n";
+    cout << "Version: " << request.version << "\n";
 
-    cout << "\nHeaders:\n";
-    for (auto &[k,v] : req.headers) cout << k << ": " << v << "\n";
+    cout << "Headers:\n";
+    for (auto& [k,v] : request.headers)
+        cout << "  " << k << ": " << v << "\n";
 
-    cout << "\nQuery Parameters:\n";
-    for (auto &[k,v] : req.query_parameters) cout << k << " = " << v << "\n";
+    cout << "Body:\n" << request.body << "\n\n";
 
-    cout << "\nBody:\n" << req.body << "\n\n";
+    // --- Encode HTTP Request ---
+    string encoded_request = encode_http_request(request);
+    cout << "--- Re-encoded HTTP Request ---\n";
+    cout << encoded_request << "\n";
 
-    HTTPResponse res;
-    res.version = "HTTP/1.1";
-    res.status_code = 200;
-    res.reason_phrase = "OK";
-    res.headers["Content-Type"] = "application/json";
-    res.headers["Server"] = "codec-lib";
-    res.body = "{ \"status\": \"success\" }";
+    // --- Create and Encode HTTP Response ---
+    HTTPResponse response;
+    response.version = request.version;
+    response.status_code = 200;
+    response.reason_phrase = "OK";
+    response.headers["Content-Type"] = "text/plain";
+    response.body = "Request processed successfully.";
 
-    string raw_response = encode_http_response(res);
-
-    cout << "===== RESPONSE =====\n";
+    string raw_response = encode_http_response(response);
+    cout << "--- Encoded HTTP Response ---\n";
     cout << raw_response << "\n";
 
-    HTTPResponse decoded_res = decode_http_response(raw_response.c_str());
-
-    cout << "===== DECODED RESPONSE =====\n";
-    cout << "Version: " << decoded_res.version << "\n";
-    cout << "Status: " << decoded_res.status_code << "\n";
-    cout << "Reason: " << decoded_res.reason_phrase << "\n";
-
-    for (auto &[k,v] : decoded_res.headers) cout << k << ": " << v << "\n";
-    cout << "\nBody:\n" << decoded_res.body << "\n";
+    // --- Decode HTTP Response ---
+    HTTPResponse decoded_response = decode_http_response(raw_response);
+    cout << "--- Decoded HTTP Response ---\n";
+    cout << "Version: " << decoded_response.version << "\n";
+    cout << "Status Code: " << decoded_response.status_code << "\n";
+    cout << "Reason Phrase: " << decoded_response.reason_phrase << "\n";
+    cout << "Headers:\n";
+    for (auto& [k,v] : decoded_response.headers)
+        cout << "  " << k << ": " << v << "\n";
+    cout << "Body:\n" << decoded_response.body << "\n";
 
     return 0;
 }
