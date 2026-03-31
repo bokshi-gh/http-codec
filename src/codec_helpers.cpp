@@ -98,7 +98,7 @@ template void parse_headers<HTTPResponse>(HTTPResponse&, const string&);
 template<typename U>
 void parse_body(U& object, const string& raw, size_t body_start) {
     string te = object.headers.at("Transfer-Encoding");
-    string cl = object.headers.count("Content-Length") ? request.headers.at("Content-Length") : "";
+    string cl = object.headers.count("Content-Length") ? object.headers.at("Content-Length") : "";
 
     // --- RFC 7231: GET and HEAD should not have body ---
     if (request.method == "GET" || request.method == "HEAD") {
@@ -108,29 +108,26 @@ void parse_body(U& object, const string& raw, size_t body_start) {
     // --- Case 1: Chunked ---
     if (!te.empty() && te.find("chunked") != string::npos) {
         size_t pos = body_start;
-        string body;
 
         while (true) {
             size_t line_end = raw.find("\r\n", pos);
             if (line_end == string::npos)
-                return {req, NEED_MORE_DATA, ""}; // incomplete chunk size
+                throw invalid_argument("incomplete chunk size");
 
             int chunk_size = stoi(raw.substr(pos, line_end - pos), nullptr, 16);
             pos = line_end + 2;
 
             if (chunk_size == 0) {
                 if (raw.size() < pos + 2)
-                    return {req, NEED_MORE_DATA, ""}; // incomplete terminating CRLF
+                    throw invalid_argument("incomplete terminating CRLF")
                 pos += 2; // skip last CRLF
-                req.body = body;
-                string remaining = raw.substr(pos);
-                return {req, COMPLETE, remaining};
+                req.body = body; // put it to object.body
             }
 
             if (raw.size() < pos + chunk_size + 2)
-                return {req, NEED_MORE_DATA, ""}; // incomplete chunk data
+                throw invalid_argument("incomplete chunk data");
 
-            body += raw.substr(pos, chunk_size);
+            object.body += raw.substr(pos, chunk_size);
             pos += chunk_size + 2; // skip chunk + CRLF
         }
     }
@@ -138,17 +135,14 @@ void parse_body(U& object, const string& raw, size_t body_start) {
     else if (!cl.empty()) {
         int len = stoi(cl);
         if (raw.size() < body_start + len)
-            return {req, NEED_MORE_DATA, ""}; // incomplete body
+            throw invalid_argument("Content-Length mismatch: expected " + to_string(len) + 
+                            " bytes, received " + to_string(raw.size() - body_start) + " bytes.");
 
-        req.body = raw.substr(body_start, len);
-        string remaining = raw.substr(body_start + len);
-        return {req, COMPLETE, remaining};
+        object.body = raw.substr(body_start, len);
     }
     // --- Case 3: Neither present ---
     else {
-        req.body = "";
-        string remaining = raw.substr(body_start);
-        return {req, COMPLETE, remaining};
+        object.body = "";
     }
 }
 
