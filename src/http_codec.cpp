@@ -19,7 +19,11 @@ HTTPRequest decode_http_request(const char* raw_request) {
     size_t header_end = raw.find("\r\n\r\n");
     if (header_end != string::npos) {
         parse_headers(request, raw.substr(first_crlf + 2, header_end - (first_crlf + 2)));
-        parse_body(request, raw, header_end + 4); 
+        
+        // --- RFC: GET and HEAD usually do not have a body ---
+        if (object.method != "GET" && object.method != "HEAD") {
+            parse_body(request, raw, header_end + 4);
+        } 
     }
 
     return request;
