@@ -19,7 +19,7 @@ HTTPRequest decode_http_request(const char* raw_request) {
     size_t header_end = raw.find("\r\n\r\n");
     if (header_end != string::npos) {
         parse_headers(request, raw.substr(first_crlf + 2, header_end - (first_crlf + 2)));
-        parse_body(request, header_end + 4); 
+        parse_body(request, raw, header_end + 4); 
     }
 
     return request;
@@ -38,7 +38,7 @@ HTTPResponse decode_http_response(const char* raw_response) {
     size_t header_end = raw.find("\r\n\r\n");
     if (header_end != string::npos) {
         parse_headers(response, raw.substr(first_crlf + 2, header_end - (first_crlf + 2)));
-        response.body = raw.substr(header_end + 4);
+        parse_body(response, raw, header_end + 4);
     }
 
     return response;
