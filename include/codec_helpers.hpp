@@ -4,6 +4,9 @@
 
 #include <string>
 #include <regex>
+#include <cctype>
+#include <cstdlib>
+
 
 using namespace std;
 
@@ -18,4 +21,8 @@ void parse_response_line(HTTPResponse& res, const string& line);
 
 // Headers (generic for request/response)
 template<typename T>
-void parse_headers(T& msg, const string& headers_block);
+void parse_headers(T& object, const string& headers_block);
+
+// Body (generic for request/response)
+template<typename U>
+void parse_body(U& object, const string& raw, size_t body_start);

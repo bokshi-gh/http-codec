@@ -77,7 +77,7 @@ void parse_response_line(HTTPResponse& res, const string& line) {
 }
 
 template<typename T>
-void parse_headers(T& msg, const string& headers_block) {
+void parse_headers(T& object, const string& headers_block) {
     size_t pos = 0;
     while (pos < headers_block.size()) {
         size_t end = headers_block.find("\r\n", pos);
@@ -91,7 +91,7 @@ void parse_headers(T& msg, const string& headers_block) {
             if (value_start < header.size() && header[value_start] == ' ')
                 value_start++;
             string value = header.substr(value_start);
-            msg.headers[key] = value;
+            object.headers[key] = value;
         }
 
         pos = end + 2;
@@ -100,3 +100,66 @@ void parse_headers(T& msg, const string& headers_block) {
 
 template void parse_headers<HTTPRequest>(HTTPRequest&, const string&);
 template void parse_headers<HTTPResponse>(HTTPResponse&, const string&);
+
+template<typename U>
+DecodeResult parse_body(const HTTPRequest& request, const std::string& raw, size_t body_start) {
+    HTTPRequest req = request; // copy
+    std::string te = request.headers.at("Transfer-Encoding");
+    std::string cl = request.headers.count("Content-Length") ? request.headers.at("Content-Length") : "";
+
+    // --- RFC 7231: GET and HEAD should not have body ---
+    if (request.method == "GET" || request.method == "HEAD") {
+        req.body = "";
+        std::string remaining = raw.substr(body_start);
+        return {req, COMPLETE, remaining};
+    }
+
+    // --- Case 1: Chunked ---
+    if (!te.empty() && te.find("chunked") != std::string::npos) {
+        size_t pos = body_start;
+        std::string body;
+
+        while (true) {
+            size_t line_end = raw.find("\r\n", pos);
+            if (line_end == std::string::npos)
+                return {req, NEED_MORE_DATA, ""}; // incomplete chunk size
+
+            int chunk_size = std::stoi(raw.substr(pos, line_end - pos), nullptr, 16);
+            pos = line_end + 2;
+
+            if (chunk_size == 0) {
+                if (raw.size() < pos + 2)
+                    return {req, NEED_MORE_DATA, ""}; // incomplete terminating CRLF
+                pos += 2; // skip last CRLF
+                req.body = body;
+                std::string remaining = raw.substr(pos);
+                return {req, COMPLETE, remaining};
+            }
+
+            if (raw.size() < pos + chunk_size + 2)
+                return {req, NEED_MORE_DATA, ""}; // incomplete chunk data
+
+            body += raw.substr(pos, chunk_size);
+            pos += chunk_size + 2; // skip chunk + CRLF
+        }
+    }
+    // --- Case 2: Content-Length ---
+    else if (!cl.empty()) {
+        int len = std::stoi(cl);
+        if (raw.size() < body_start + len)
+            return {req, NEED_MORE_DATA, ""}; // incomplete body
+
+        req.body = raw.substr(body_start, len);
+        std::string remaining = raw.substr(body_start + len);
+        return {req, COMPLETE, remaining};
+    }
+    // --- Case 3: Neither present ---
+    else {
+        req.body = "";
+        std::string remaining = raw.substr(body_start);
+        return {req, COMPLETE, remaining};
+    }
+}
+
+template void parse_body<HTTPRequest>(HTTPRequest&, const string&, size_t);
+template void parse_body<HTTPResponse>(HTTPResponse&, const string&, size_t);
