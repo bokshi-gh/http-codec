@@ -53,14 +53,15 @@ string encode_http_request(const HTTPRequest &request) {
     if (!regex_match(request.version, version_regex))
         throw invalid_argument("Invalid HTTP version format");
 
-    string normalized_request_target = request.request_target;
-    if (normalized_request_target.size() > 1 && normalized_request_target.back() == '/') {
-        normalized_request_target.pop_back();
-    }
+    string target = request.request_target;
+    if (target.size() > 1 && target.back() == '/') target.pop_back();
 
-    string raw = request.method + " " + normalized_request_target + " " + request.version + "\r\n";
+    string raw = request.method + " " + target + " " + request.version + "\r\n";
+
     for (auto &h : request.headers) raw += h.first + ": " + h.second + "\r\n";
-    raw += "\r\n" + request.body;
+    raw += "\r\n";
+
+    raw += encode_body(request);
     return raw;
 }
 
@@ -70,12 +71,15 @@ string encode_http_response(const HTTPResponse &response) {
     regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
     if (!regex_match(response.version, version_regex))
         throw invalid_argument("Invalid HTTP version format");
-    
+
     if (response.status_code < 100 || response.status_code > 599)
         throw invalid_argument("Invalid status code");
 
     string raw = response.version + " " + to_string(response.status_code) + " " + response.reason_phrase + "\r\n";
+
     for (auto &h : response.headers) raw += h.first + ": " + h.second + "\r\n";
-    raw += "\r\n" + response.body;
+    raw += "\r\n";
+
+    raw += encode_body(response);
     return raw;
 }
