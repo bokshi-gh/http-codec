@@ -97,50 +97,82 @@ template void parse_headers<HTTPResponse>(HTTPResponse&, const string&);
 
 template<typename U>
 void parse_body(U& object, const string& raw, size_t body_start) {
-    string te = object.headers.at("Transfer-Encoding");
-    string cl = object.headers.count("Content-Length") ? object.headers.at("Content-Length") : "";
 
-    // --- RFC 7231: GET and HEAD should not have body ---
-    if (request.method == "GET" || request.method == "HEAD") {
+    // Get headers (may be empty if not present)
+    string te = object.headers.at("Transfer-Encoding");
+    string cl = object.headers.count("Content-Length") 
+                ? object.headers.at("Content-Length") 
+                : "";
+
+    // --- RFC: GET and HEAD usually do not have a body ---
+    if (object.method == "GET" || object.method == "HEAD") {
         return;
     }
 
-    // --- Case 1: Chunked ---
+    // --- Case 1: Transfer-Encoding: chunked ---
     if (!te.empty() && te.find("chunked") != string::npos) {
+
+        // Start reading from beginning of body
         size_t pos = body_start;
 
         while (true) {
+
+            // Find end of chunk-size line (ends with \r\n)
             size_t line_end = raw.find("\r\n", pos);
             if (line_end == string::npos)
                 throw invalid_argument("incomplete chunk size");
 
+            // Extract chunk size (hex)
             int chunk_size = stoi(raw.substr(pos, line_end - pos), nullptr, 16);
+
+            // Move position to start of chunk data
             pos = line_end + 2;
 
+            // If chunk size is 0 → end of body
             if (chunk_size == 0) {
+
+                // Ensure final \r\n exists
                 if (raw.size() < pos + 2)
-                    throw invalid_argument("incomplete terminating CRLF")
-                pos += 2; // skip last CRLF
-                req.body = body; // put it to object.body
+                    throw invalid_argument("incomplete terminating CRLF");
+
+                // Skip final \r\n
+                pos += 2;
+
+                // Body parsing complete
+                return;
             }
 
+            // Check if full chunk data is available
+            // +2 is for trailing \r\n after chunk data
             if (raw.size() < pos + chunk_size + 2)
                 throw invalid_argument("incomplete chunk data");
 
+            // Append chunk data to body
             object.body += raw.substr(pos, chunk_size);
-            pos += chunk_size + 2; // skip chunk + CRLF
+
+            // Move position past data and trailing \r\n
+            pos += chunk_size + 2;
         }
     }
+
     // --- Case 2: Content-Length ---
     else if (!cl.empty()) {
-        int len = stoi(cl);
-        if (raw.size() < body_start + len)
-            throw invalid_argument("Content-Length mismatch: expected " + to_string(len) + 
-                            " bytes, received " + to_string(raw.size() - body_start) + " bytes.");
 
+        // Convert length from string to integer
+        int len = stoi(cl);
+
+        // Check if we have enough data
+        if (raw.size() < body_start + len)
+            throw invalid_argument(
+                "Content-Length mismatch: expected " + to_string(len) +
+                " bytes, received " + to_string(raw.size() - body_start)
+            );
+
+        // Extract exactly Content-Length bytes
         object.body = raw.substr(body_start, len);
     }
-    // --- Case 3: Neither present ---
+
+    // --- Case 3: No body ---
     else {
         object.body = "";
     }
