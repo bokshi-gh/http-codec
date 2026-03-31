@@ -11,12 +11,6 @@ void normalize_request_target(HTTPRequest& req) {
     }
 }
 
-void validate_request_target(const string& request_target) {
-    if (request_target.empty() || request_target[0] != '/') {
-        throw invalid_argument("Invalid request target: " + request_target + " (must start with '/')");
-    }
-}
-
 void parse_request_target(HTTPRequest& req) {
     normalize_request_target(req);
 

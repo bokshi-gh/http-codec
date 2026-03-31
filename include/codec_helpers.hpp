@@ -12,7 +12,6 @@ using namespace std;
 
 // Request
 void parse_request_target(HTTPRequest& req);
-void validate_request_target(const string& request_target);
 void normalize_request_target(HTTPRequest& req);
 void parse_request_line(HTTPRequest& req, const string& line);
 

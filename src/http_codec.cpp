@@ -19,7 +19,7 @@ HTTPRequest decode_http_request(const char* raw_request) {
     size_t header_end = raw.find("\r\n\r\n");
     if (header_end != string::npos) {
         parse_headers(request, raw.substr(first_crlf + 2, header_end - (first_crlf + 2)));
-        request.body = raw.substr(header_end + 4);
+        parse_body(request, header_end + 4); 
     }
 
     return request;
@@ -49,8 +49,6 @@ string encode_http_request(const HTTPRequest &request) {
     if (request.request_target.empty()) throw invalid_argument("Target empty");
     if (request.version.empty()) throw invalid_argument("Version empty");
 
-    validate_request_target(request.request_target);
-    
     regex version_regex(R"(HTTP/(1\.[01]|2\.0|3\.0))");
     if (!regex_match(request.version, version_regex))
         throw invalid_argument("Invalid HTTP version format");
