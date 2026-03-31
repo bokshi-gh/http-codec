@@ -5,15 +5,7 @@
 
 using namespace std;
 
-void normalize_request_target(HTTPRequest& req) {
-    while (req.request_target.size() > 1 && req.request_target.back() == '/') {
-        req.request_target.pop_back();
-    }
-}
-
 void parse_request_target(HTTPRequest& req) {
-    normalize_request_target(req);
-
     const string& target = req.request_target;
     size_t qpos = target.find('?');
     req.path = (qpos == string::npos) ? target : target.substr(0, qpos);
