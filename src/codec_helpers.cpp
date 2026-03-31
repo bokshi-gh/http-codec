@@ -168,17 +168,12 @@ template void parse_body<HTTPResponse>(HTTPResponse&, const string&, size_t);
 
 template<typename V>
 string encode_body(const V &message) {
-    string te = message.headers.count("Transfer-Encoding") 
-                ? message.headers.at("Transfer-Encoding") 
-                : "";
-
-    string cl = message.headers.count("Content-Length") 
-                ? message.headers.at("Content-Length") 
-                : "";
-
     const string &body = message.body;
 
     // --- Case 1: Transfer-Encoding: chunked ---
+    auto te_it = message.headers.find("Transfer-Encoding");
+    string te = (te_it != message.headers.end()) ? te_it->second : "";
+
     if (!te.empty() && te.find("chunked") != string::npos) {
         string raw;
         size_t pos = 0;
@@ -186,11 +181,9 @@ string encode_body(const V &message) {
 
         while (pos < body.size()) {
             size_t len = min(chunk_size, body.size() - pos);
-
             stringstream ss;
             ss << hex << len;
             raw += ss.str() + "\r\n";
-
             raw += body.substr(pos, len) + "\r\n";
             pos += len;
         }
@@ -201,23 +194,14 @@ string encode_body(const V &message) {
     }
 
     // --- Case 2: Content-Length ---
-    else if (!cl.empty()) {
-        int len = stoi(cl);
-        if (len < 0)
-            throw invalid_argument("Negative Content-Length");
+    // Automatically override or set Content-Length
+    int len = static_cast<int>(body.size());
 
-        if (body.size() < (size_t)len)
-            throw invalid_argument("Body smaller than Content-Length");
+    // Safety check
+    if (len < 0)
+        throw invalid_argument("Negative Content-Length");
 
-        return body.substr(0, len);
-    }
-
-    // --- Case 3: Neither present ---
-    else {
-        if (!body.empty())
-            throw invalid_argument("Body present but no Content-Length or Transfer-Encoding");
-        return "";
-    }
+    return body; // return the full body
 }
 
 template string encode_body<HTTPRequest>(const HTTPRequest&);
