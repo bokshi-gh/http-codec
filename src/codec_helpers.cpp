@@ -104,11 +104,6 @@ void parse_body(U& object, const string& raw, size_t body_start) {
                 ? object.headers.at("Content-Length") 
                 : "";
 
-    // --- RFC: GET and HEAD usually do not have a body ---
-    if (object.method == "GET" || object.method == "HEAD") {
-        return;
-    }
-
     // --- Case 1: Transfer-Encoding: chunked ---
     if (!te.empty() && te.find("chunked") != string::npos) {
 
