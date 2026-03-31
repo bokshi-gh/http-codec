@@ -21,7 +21,7 @@ HTTPRequest decode_http_request(const char* raw_request) {
         parse_headers(request, raw.substr(first_crlf + 2, header_end - (first_crlf + 2)));
         
         // --- RFC: GET and HEAD usually do not have a body ---
-        if (object.method != "GET" && object.method != "HEAD") {
+        if (request.method != "GET" && request.method != "HEAD") {
             parse_body(request, raw, header_end + 4);
         } 
     }
