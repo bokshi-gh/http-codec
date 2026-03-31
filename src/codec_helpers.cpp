@@ -91,10 +91,8 @@ template<typename U>
 void parse_body(U& object, const string& raw, size_t body_start) {
 
     // Get headers (may be empty if not present)
-    string te = object.headers.at("Transfer-Encoding");
-    string cl = object.headers.count("Content-Length") 
-                ? object.headers.at("Content-Length") 
-                : "";
+    string te = object.headers.count("Transfer-Encoding") ? object.headers.at("Transfer-Encoding") : "";
+    string cl = object.headers.count("Content-Length") ? object.headers.at("Content-Length") : "";
 
     // --- Case 1: Transfer-Encoding: chunked ---
     if (!te.empty() && te.find("chunked") != string::npos) {
