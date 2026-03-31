@@ -78,9 +78,15 @@ string encode_http_response(const HTTPResponse &response) {
 
     string raw = response.version + " " + to_string(response.status_code) + " " + response.reason_phrase + "\r\n";
 
+    if (!response.body.empty()) {
+        headers["Content-Length"] = to_string(response.body.size());  // always override
+        // headers.erase("Transfer-Encoding"); // optional, if you prefer strict Content-Length
+    }
+
     for (auto &h : response.headers) raw += h.first + ": " + h.second + "\r\n";
     raw += "\r\n";
 
-    raw += encode_body(response);
+    raw += response.body;
+    
     return raw;
 }
