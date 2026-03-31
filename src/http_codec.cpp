@@ -57,10 +57,7 @@ string encode_http_request(const HTTPRequest &request) {
     if (!regex_match(request.version, version_regex))
         throw invalid_argument("Invalid HTTP version format");
 
-    string target = request.request_target;
-    if (target.size() > 1 && target.back() == '/') target.pop_back();
-
-    string raw = request.method + " " + target + " " + request.version + "\r\n";
+    string raw = request.method + " " + request.request_target + " " + request.version + "\r\n";
 
     for (auto &h : request.headers) raw += h.first + ": " + h.second + "\r\n";
     raw += "\r\n";
