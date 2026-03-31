@@ -47,7 +47,7 @@ int main() {
     cout << raw_response << "\n";
 
     // --- Decode HTTP Response ---
-    HTTPResponse decoded_response = decode_http_response(raw_response);
+    HTTPResponse decoded_response = decode_http_response(raw_response.c_str());
     cout << "--- Decoded HTTP Response ---\n";
     cout << "Version: " << decoded_response.version << "\n";
     cout << "Status Code: " << decoded_response.status_code << "\n";

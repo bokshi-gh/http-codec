@@ -221,3 +221,6 @@ string encode_body(const V &message) {
         return "";
     }
 }
+
+template string encode_body<HTTPRequest>(const HTTPRequest&);
+template string encode_body<HTTPResponse>(const HTTPResponse&);
