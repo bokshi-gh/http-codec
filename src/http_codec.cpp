@@ -57,12 +57,18 @@ string encode_http_request(const HTTPRequest &request) {
     if (!regex_match(request.version, version_regex))
         throw invalid_argument("Invalid HTTP version format");
 
-    string raw = request.method + " " + request.request_target + " " + request.version + "\r\n";
+    unordered_map<string, string> headers = request.headers;
 
-    for (auto &h : request.headers) raw += h.first + ": " + h.second + "\r\n";
+    if (!request.body.empty()) {
+        headers["Content-Length"] = to_string(request.body.size());
+    }
+
+    string raw = request.method + " " + request.request_target + " " + request.version + "\r\n";
+    for (auto &h : headers) raw += h.first + ": " + h.second + "\r\n";
     raw += "\r\n";
 
-    raw += encode_body(request);
+    raw += request.body;
+
     return raw;
 }
 
@@ -76,17 +82,17 @@ string encode_http_response(const HTTPResponse &response) {
     if (response.status_code < 100 || response.status_code > 599)
         throw invalid_argument("Invalid status code");
 
-    string raw = response.version + " " + to_string(response.status_code) + " " + response.reason_phrase + "\r\n";
+    unordered_map<string, string> headers = response.headers;
 
     if (!response.body.empty()) {
-        headers["Content-Length"] = to_string(response.body.size());  // always override
-        // headers.erase("Transfer-Encoding"); // optional, if you prefer strict Content-Length
+        headers["Content-Length"] = to_string(response.body.size());
     }
 
-    for (auto &h : response.headers) raw += h.first + ": " + h.second + "\r\n";
+    string raw = response.version + " " + to_string(response.status_code) + " " + response.reason_phrase + "\r\n";
+    for (auto &h : headers) raw += h.first + ": " + h.second + "\r\n";
     raw += "\r\n";
 
     raw += response.body;
-    
+
     return raw;
 }
