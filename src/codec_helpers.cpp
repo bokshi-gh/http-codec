@@ -13,7 +13,7 @@ void normalize_request_target(HTTPRequest& req) {
 
 void validate_request_target(const string& request_target) {
     if (request_target.empty() || request_target[0] != '/') {
-        throw std::invalid_argument("Invalid request target: " + request_target + " (must start with '/')");
+        throw invalid_argument("Invalid request target: " + request_target + " (must start with '/')");
     }
 }
 
@@ -102,29 +102,26 @@ template void parse_headers<HTTPRequest>(HTTPRequest&, const string&);
 template void parse_headers<HTTPResponse>(HTTPResponse&, const string&);
 
 template<typename U>
-DecodeResult parse_body(const HTTPRequest& request, const std::string& raw, size_t body_start) {
-    HTTPRequest req = request; // copy
-    std::string te = request.headers.at("Transfer-Encoding");
-    std::string cl = request.headers.count("Content-Length") ? request.headers.at("Content-Length") : "";
+void parse_body(U& object, const string& raw, size_t body_start) {
+    string te = object.headers.at("Transfer-Encoding");
+    string cl = object.headers.count("Content-Length") ? request.headers.at("Content-Length") : "";
 
     // --- RFC 7231: GET and HEAD should not have body ---
     if (request.method == "GET" || request.method == "HEAD") {
-        req.body = "";
-        std::string remaining = raw.substr(body_start);
-        return {req, COMPLETE, remaining};
+        return;
     }
 
     // --- Case 1: Chunked ---
-    if (!te.empty() && te.find("chunked") != std::string::npos) {
+    if (!te.empty() && te.find("chunked") != string::npos) {
         size_t pos = body_start;
-        std::string body;
+        string body;
 
         while (true) {
             size_t line_end = raw.find("\r\n", pos);
-            if (line_end == std::string::npos)
+            if (line_end == string::npos)
                 return {req, NEED_MORE_DATA, ""}; // incomplete chunk size
 
-            int chunk_size = std::stoi(raw.substr(pos, line_end - pos), nullptr, 16);
+            int chunk_size = stoi(raw.substr(pos, line_end - pos), nullptr, 16);
             pos = line_end + 2;
 
             if (chunk_size == 0) {
@@ -132,7 +129,7 @@ DecodeResult parse_body(const HTTPRequest& request, const std::string& raw, size
                     return {req, NEED_MORE_DATA, ""}; // incomplete terminating CRLF
                 pos += 2; // skip last CRLF
                 req.body = body;
-                std::string remaining = raw.substr(pos);
+                string remaining = raw.substr(pos);
                 return {req, COMPLETE, remaining};
             }
 
@@ -145,18 +142,18 @@ DecodeResult parse_body(const HTTPRequest& request, const std::string& raw, size
     }
     // --- Case 2: Content-Length ---
     else if (!cl.empty()) {
-        int len = std::stoi(cl);
+        int len = stoi(cl);
         if (raw.size() < body_start + len)
             return {req, NEED_MORE_DATA, ""}; // incomplete body
 
         req.body = raw.substr(body_start, len);
-        std::string remaining = raw.substr(body_start + len);
+        string remaining = raw.substr(body_start + len);
         return {req, COMPLETE, remaining};
     }
     // --- Case 3: Neither present ---
     else {
         req.body = "";
-        std::string remaining = raw.substr(body_start);
+        string remaining = raw.substr(body_start);
         return {req, COMPLETE, remaining};
     }
 }
