@@ -9,7 +9,7 @@ int main() {
     const char* raw_request = 
         "POST /api/data?user=alice&id=123 HTTP/1.1\r\n"
         "Host: example.com\r\n"
-        "Content-Length: 27\r\n"
+        "Content-Length: 26\r\n"
         "Connection: keep-alive\r\n"
         "\r\n"
         "{\"message\":\"Hello World!\"}";
