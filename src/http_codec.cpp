@@ -19,11 +19,7 @@ HTTPRequest decode_http_request(const char* raw_request) {
     size_t header_end = raw.find("\r\n\r\n");
     if (header_end != string::npos) {
         parse_headers(request, raw.substr(first_crlf + 2, header_end - (first_crlf + 2)));
-        
-        // --- RFC: GET and HEAD usually do not have a body ---
-        if (request.method != "GET" && request.method != "HEAD") {
-            parse_body(request, raw, header_end + 4);
-        } 
+        request.body = (header_end + 4 < raw.size()) ? raw.substr(header_end + 4) : "";
     }
 
     return request;
@@ -42,7 +38,7 @@ HTTPResponse decode_http_response(const char* raw_response) {
     size_t header_end = raw.find("\r\n\r\n");
     if (header_end != string::npos) {
         parse_headers(response, raw.substr(first_crlf + 2, header_end - (first_crlf + 2)));
-        parse_body(response, raw, header_end + 4);
+        response.body = (header_end + 4 < raw.size()) ? raw.substr(header_end + 4) : "";
     }
 
     return response;
@@ -57,16 +53,35 @@ string encode_http_request(const HTTPRequest &request) {
     if (!regex_match(request.version, version_regex))
         throw invalid_argument("Invalid HTTP version format");
 
-    unordered_map<string, string> headers = request.headers;
-
-    if (!request.body.empty()) {
-        headers["Content-Length"] = to_string(request.body.size());
-    }
+    const auto& headers = request.headers;
 
     string raw = request.method + " " + request.request_target + " " + request.version + "\r\n";
-    for (auto &h : headers) raw += h.first + ": " + h.second + "\r\n";
-    raw += "\r\n";
 
+    static unordered_set<string> no_merge = {
+        "set-cookie",
+        "www-authenticate",
+        "authorization"
+    };
+
+    for (const auto &h : headers) {
+        const string& key = h.first;
+        const vector<string>& values = h.second;
+
+        if (no_merge.count(key)) {
+            for (const auto &value : values) {
+                raw += key + ": " + value + "\r\n";
+            }
+        } else {
+            string merged;
+            for (size_t i = 0; i < values.size(); i++) {
+                if (i > 0) merged += ", ";
+                merged += values[i];
+            }
+            raw += key + ": " + merged + "\r\n";
+        }
+    }
+
+    raw += "\r\n";
     raw += request.body;
 
     return raw;
@@ -82,16 +97,35 @@ string encode_http_response(const HTTPResponse &response) {
     if (response.status_code < 100 || response.status_code > 599)
         throw invalid_argument("Invalid status code");
 
-    unordered_map<string, string> headers = response.headers;
-
-    if (!response.body.empty()) {
-        headers["Content-Length"] = to_string(response.body.size());
-    }
+    auto headers = response.headers;
 
     string raw = response.version + " " + to_string(response.status_code) + " " + response.reason_phrase + "\r\n";
-    for (auto &h : headers) raw += h.first + ": " + h.second + "\r\n";
-    raw += "\r\n";
 
+    static unordered_set<string> no_merge = {
+        "set-cookie",
+        "www-authenticate",
+        "authorization"
+    };
+
+    for (const auto &h : headers) {
+        const string &key = h.first;
+        const vector<string> &values = h.second;
+
+        if (no_merge.count(key)) {
+            for (const auto &value : values) {
+                raw += key + ": " + value + "\r\n";
+            }
+        } else {
+            string merged;
+            for (size_t i = 0; i < values.size(); i++) {
+                if (i > 0) merged += ", ";
+                merged += values[i];
+            }
+            raw += key + ": " + merged + "\r\n";
+        }
+    }
+
+    raw += "\r\n";
     raw += response.body;
 
     return raw;
