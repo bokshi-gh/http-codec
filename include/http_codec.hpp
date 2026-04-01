@@ -3,14 +3,14 @@
 #include <string>
 #include <unordered_map>
 #include <cstdint>
-#include <cctype>   // ✅ required for tolower
+#include <cctype>
 
 using namespace std;
 
 struct CaseInsensitiveHash {
     size_t operator()(const string& key) const {
         size_t hash = 0;
-        for (unsigned char c : key) {  // ✅ avoid signed char issues
+        for (unsigned char c : key) {
             hash = hash * 31 + std::tolower(c);
         }
         return hash;
