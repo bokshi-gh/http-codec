@@ -5,57 +5,64 @@
 using namespace std;
 
 int main() {
-    // Example raw HTTP request
-    const char* raw_request = 
-        "POST /api/data?user=alice&id=123 HTTP/1.1\r\n"
+    // -----------------------------
+    // Example: raw HTTP request
+    // -----------------------------
+    const char* raw_request =
+        "GET /hello?name=ChatGPT HTTP/1.1\r\n"
         "Host: example.com\r\n"
-        "Content-Length: 26\r\n"
-        "Connection: keep-alive\r\n"
+        "User-Agent: MyTestClient/1.0\r\n"
+        "Accept: text/html,application/json\r\n"
+        "Set-Cookie: session=abc123\r\n"
+        "Set-Cookie: theme=dark\r\n"
         "\r\n"
-        "{\"message\":\"Hello World!\"}";
+        "body-content-goes-here";
 
-    // --- Decode HTTP Request ---
+    // Decode request
     HTTPRequest request = decode_http_request(raw_request);
 
-    cout << "--- Decoded HTTP Request ---\n";
-    cout << "Method: " << request.method << "\n";
-    cout << "Request Target: " << request.request_target << "\n";
-    cout << "Path: " << request.path << "\n";
-    cout << "Version: " << request.version << "\n";
+    cout << "=== Decoded HTTP Request ===" << endl;
+    cout << "Method: " << request.method << endl;
+    cout << "Request Target: " << request.request_target << endl;
+    cout << "Version: " << request.version << endl;
+    cout << "Headers:" << endl;
+    for (const auto &h : request.headers) {
+        cout << "  " << h.first << ": ";
+        for (const auto &v : h.second) cout << v << " | ";
+        cout << endl;
+    }
+    cout << "Body: " << request.body << endl;
 
-    cout << "Headers:\n";
-    for (auto& [k,v] : request.headers)
-        cout << "  " << k << ": " << v << "\n";
-
-    cout << "Body:\n" << request.body << "\n\n";
-
-    // --- Encode HTTP Request ---
+    // Encode back to raw HTTP
     string encoded_request = encode_http_request(request);
-    cout << "--- Re-encoded HTTP Request ---\n";
-    cout << encoded_request << "\n";
+    cout << "\n=== Encoded HTTP Request ===" << endl;
+    cout << encoded_request << endl;
 
-    // --- Create and Encode HTTP Response ---
-    HTTPResponse response;
-    response.version = request.version;
-    response.status_code = 200;
-    response.reason_phrase = "OK";
-    response.headers["Content-Type"] = "text/plain";
-    response.body = "Request processed successfully.";
+    // -----------------------------
+    // Example: raw HTTP response
+    // -----------------------------
+    const char* raw_response =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/plain\r\n"
+        "Set-Cookie: user=123\r\n"
+        "Set-Cookie: theme=light\r\n"
+        "\r\n"
+        "Hello, world!";
 
-    string raw_response = encode_http_response(response);
-    cout << "--- Encoded HTTP Response ---\n";
-    cout << raw_response << "\n";
+    // Decode response
+    HTTPResponse response = decode_http_response(raw_response);
 
-    // --- Decode HTTP Response ---
-    HTTPResponse decoded_response = decode_http_response(raw_response.c_str());
-    cout << "--- Decoded HTTP Response ---\n";
-    cout << "Version: " << decoded_response.version << "\n";
-    cout << "Status Code: " << decoded_response.status_code << "\n";
-    cout << "Reason Phrase: " << decoded_response.reason_phrase << "\n";
-    cout << "Headers:\n";
-    for (auto& [k,v] : decoded_response.headers)
-        cout << "  " << k << ": " << v << "\n";
-    cout << "Body:\n" << decoded_response.body << "\n";
+    cout << "\n=== Decoded HTTP Response ===" << endl;
+    cout << "Version: " << response.version << endl;
+    cout << "Status Code: " << response.status_code << endl;
+    cout << "Reason Phrase: " << response.reason_phrase << endl;
+    cout << "Headers:" << endl;
+    for (const auto &h : response.headers) {
+        cout << "  " << h.first << ": ";
+        for (const auto &v : h.second) cout << v << " | ";
+        cout << endl;
+    }
+    cout << "Body: " << response.body << endl;
 
     return 0;
 }
