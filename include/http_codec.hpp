@@ -3,14 +3,15 @@
 #include <string>
 #include <unordered_map>
 #include <cstdint>
+#include <cctype>   // ✅ required for tolower
 
 using namespace std;
 
 struct CaseInsensitiveHash {
     size_t operator()(const string& key) const {
         size_t hash = 0;
-        for (char c : key) {
-            hash = hash * 31 + tolower(c);
+        for (unsigned char c : key) {  // ✅ avoid signed char issues
+            hash = hash * 31 + std::tolower(c);
         }
         return hash;
     }
@@ -19,12 +20,23 @@ struct CaseInsensitiveHash {
 struct CaseInsensitiveEqual {
     bool operator()(const string& a, const string& b) const {
         if (a.size() != b.size()) return false;
+
         for (size_t i = 0; i < a.size(); i++) {
-            if (tolower(a[i]) != tolower(b[i])) return false;
+            if (std::tolower((unsigned char)a[i]) !=
+                std::tolower((unsigned char)b[i])) {
+                return false;
+            }
         }
         return true;
     }
 };
+
+using HeaderMap = unordered_map<
+    string,
+    string,
+    CaseInsensitiveHash,
+    CaseInsensitiveEqual
+>;
 
 class HTTPRequest {
 public:
@@ -32,10 +44,12 @@ public:
     string method;
     string request_target;
     string path;
+
     unordered_map<string, string> parameters;        // Filled by routing layer
-    unordered_map<string, string> query_parameters;  // Filled by codec
+    unordered_map<string, string> query_parameters;  // Filled codec layer
+
     string version;
-    unordered_map<string, string, CaseInsensitiveHash, CaseInsensitiveEqual> headers;
+    HeaderMap headers; 
     string body;
 };
 
@@ -45,7 +59,8 @@ public:
     string version;
     uint16_t status_code;
     string reason_phrase;
-    unordered_map<string, string, CaseInsensitiveHash, CaseInsensitiveEqual> headers;
+
+    HeaderMap headers;
     string body;
 };
 
