@@ -33,7 +33,7 @@ struct CaseInsensitiveEqual {
 
 using HeaderMap = unordered_map<
     string,
-    string,
+    vector<string>,
     CaseInsensitiveHash,
     CaseInsensitiveEqual
 >;
