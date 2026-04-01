@@ -65,19 +65,25 @@ void parse_response_line(HTTPResponse& res, const string& line) {
 template<typename T>
 void parse_headers(T& object, const string& headers_block) {
     size_t pos = 0;
+
     while (pos < headers_block.size()) {
         size_t end = headers_block.find("\r\n", pos);
         if (end == string::npos) end = headers_block.size();
 
         string header = headers_block.substr(pos, end - pos);
+
         size_t colon = header.find(':');
         if (colon != string::npos) {
             string key = header.substr(0, colon);
+
+            // trim leading space after colon
             size_t value_start = colon + 1;
-            if (value_start < header.size() && header[value_start] == ' ')
+            while (value_start < header.size() && header[value_start] == ' ')
                 value_start++;
+
             string value = header.substr(value_start);
-            object.headers[key] = value;
+
+            object.headers[key].push_back(value);
         }
 
         pos = end + 2;
