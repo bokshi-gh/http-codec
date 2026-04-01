@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include <vector>
+#include <unordered_set>
 #include <cctype>
 
 using namespace std;
