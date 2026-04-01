@@ -1,6 +1,6 @@
 # HTTP Codec
 
-A lightweight C++ library for encoding and decoding requests and responses.
+A lightweight C++ library for encoding and decoding HTTP requests and responses
 
 ---
 
@@ -32,5 +32,4 @@ See the full demo in [`examples/http_codec_demo.cpp`](examples/http_codec_demo.c
 ## Notes
 
 - Assumes well-formed HTTP messages; malformed requests may produce undefined behavior.
-- The HTTP message format is validated with minimal error handling.
 - The library does not populate dynamic route parameters; this is the job of your routing layer.
